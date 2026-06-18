@@ -1,6 +1,24 @@
-.env
-.env.local
+# Dependencies
 node_modules/
-postgres_data/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
 *.log
-.DS_Store
+
+# Database backups
+*.sql
+*.dump
+backup/
+backups/
+
+# Build folders
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/

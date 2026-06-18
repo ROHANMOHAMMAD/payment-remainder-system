@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Smart Payment Reminder System — UI Demo</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #22263a;
+    --border: #2e3347;
+    --text: #e8ecf5;
+    --muted: #7b84a0;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f97316;
+    --yellow: #eab308;
+    --teal: #14b8a6;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font); display:flex; height:100vh; overflow:hidden; }
+
+  /* Sidebar */
+  .sidebar { width:220px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+  .logo { padding:20px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  .logo-icon { width:32px; height:32px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .logo-text { font-size:13px; font-weight:700; color:var(--text); line-height:1.2; }
+  .logo-text span { color:var(--muted); font-weight:400; font-size:11px; display:block; }
+
+  nav { flex:1; padding:12px 0; }
+  .nav-section { padding:8px 14px 4px; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 18px; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; border-left:2px solid transparent; }
+  .nav-item:hover { color:var(--text); background:rgba(99,102,241,.08); }
+  .nav-item.active { color:var(--accent2); background:rgba(99,102,241,.12); border-left-color:var(--accent); }
+  .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+  .badge { margin-left:auto; background:var(--red); color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; font-weight:600; }
+  .badge.orange { background:var(--orange); }
+
+  .sidebar-footer { padding:14px 18px; border-top:1px solid var(--border); }
+  .user-row { display:flex; align-items:center; gap:10px; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--teal)); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+  .user-info { font-size:12px; line-height:1.4; }
+  .user-info .name { font-weight:600; color:var(--text); }
+  .user-info .role { color:var(--muted); font-size:11px; }
+
+  /* Main */
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar { height:56px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:12px; flex-shrink:0; }
+  .topbar-title { font-size:16px; font-weight:700; flex:1; }
+  .topbar-actions { display:flex; gap:8px; align-items:center; }
+  .btn { padding:7px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:none; transition:all .15s; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover { background:#7c3aed; }
+  .btn-outline { background:transparent; border:1px solid var(--border); color:var(--muted); }
+  .btn-outline:hover { border-color:var(--accent2); color:var(--text); }
+  .btn-sm { padding:5px 10px; font-size:11px; }
+  .search-box { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:7px 12px; font-size:13px; color:var(--text); width:220px; outline:none; }
+  .search-box::placeholder { color:var(--muted); }
+  .search-box:focus { border-color:var(--accent); }
+
+  .content { flex:1; overflow-y:auto; padding:24px; }
+  .content::-webkit-scrollbar { width:4px; }
+  .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+  /* Page sections */
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* KPI grid */
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+  .kpi { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .kpi-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+  .kpi-label { font-size:12px; color:var(--muted); font-weight:500; }
+  .kpi-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .kpi-value { font-size:26px; font-weight:800; letter-spacing:-1px; }
+  .kpi-change { font-size:11px; margin-top:4px; color:var(--muted); }
+  .kpi-change.up { color:var(--green); }
+  .kpi-change.down { color:var(--red); }
+
+  /* Cards */
+  .card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .card-title { font-size:14px; font-weight:700; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:8px 12px; color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); }
+  td { padding:12px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,.02); }
+
+  .status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+  .status-paid { background:rgba(34,197,94,.15); color:var(--green); }
+  .status-pending { background:rgba(234,179,8,.15); color:var(--yellow); }
+  .status-overdue { background:rgba(239,68,68,.15); color:var(--red); }
+  .status-partial { background:rgba(249,115,22,.15); color:var(--orange); }
+
+  .dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  /* Charts */
+  .chart-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+  .bar-chart { padding:4px 0; }
+  .bar-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; font-size:12px; }
+  .bar-label { width:80px; color:var(--muted); flex-shrink:0; text-align:right; }
+  .bar-track { flex:1; background:var(--bg3); border-radius:4px; height:22px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:8px; font-size:11px; font-weight:600; color:rgba(255,255,255,.9); transition:width .6s cubic-bezier(.4,0,.2,1); }
+  .bar-val { width:60px; text-align:right; font-weight:600; }
+
+  /* Mini progress */
+  .progress-track { background:var(--bg3); border-radius:4px; height:6px; margin-top:8px; }
+  .progress-fill { height:6px; border-radius:4px; transition:width .6s; }
+
+  /* Channel effectiveness */
+  .channel-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .channel-card { background:var(--bg3); border-radius:10px; padding:16px; }
+  .channel-name { font-size:12px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .channel-stats { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:8px; }
+
+  /* Invoice form */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-group { margin-bottom:0; }
+  .form-group label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:500; }
+  .form-control { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-size:13px; color:var(--text); outline:none; }
+  .form-control:focus { border-color:var(--accent); }
+  .form-control option { background:var(--bg2); }
+
+  /* Line items */
+  .line-items { margin:16px 0; }
+  .line-item-row { display:grid; grid-template-columns:1fr 80px 100px 80px 28px; gap:8px; align-items:center; margin-bottom:8px; }
+  .line-item-total { text-align:right; font-weight:600; color:var(--accent2); }
+
+  /* Customer list */
+  .customer-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .customer-row:last-child { border-bottom:none; }
+  .cust-avatar { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
+  .risk-bar { width:60px; }
+
+  /* Risk score */
+  .risk-label { font-size:10px; font-weight:700; }
+  .risk-low { color:var(--green); }
+  .risk-med { color:var(--yellow); }
+  .risk-high { color:var(--red); }
+
+  /* Reminder timeline */
+  .timeline { position:relative; padding-left:28px; }
+  .timeline::before { content:''; position:absolute; left:9px; top:0; bottom:0; width:1px; background:var(--border); }
+  .tl-item { position:relative; margin-bottom:18px; }
+  .tl-dot { position:absolute; left:-23px; width:10px; height:10px; border-radius:50%; border:2px solid var(--bg2); top:3px; }
+  .tl-sent { background:var(--green); }
+  .tl-pending { background:var(--yellow); }
+  .tl-scheduled { background:var(--muted); }
+  .tl-content { background:var(--bg3); border-radius:8px; padding:12px 14px; }
+  .tl-title { font-size:13px; font-weight:600; margin-bottom:4px; }
+  .tl-meta { font-size:11px; color:var(--muted); display:flex; gap:12px; }
+  .tl-channels { display:flex; gap:6px; margin-top:8px; }
+  .tl-chip { background:rgba(99,102,241,.15); color:var(--accent2); font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .tl-chip.green { background:rgba(34,197,94,.15); color:var(--green); }
+  .tl-chip.orange { background:rgba(249,115,22,.15); color:var(--orange); }
+
+  /* Tabs */
+  .tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:20px; }
+  .tab { padding:10px 18px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:.15s; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--accent2); border-bottom-color:var(--accent); }
+
+  /* Notification */
+  .notif { position:fixed; top:18px; right:18px; background:#22263a; border:1px solid var(--accent); border-radius:10px; padding:12px 16px; font-size:13px; z-index:1000; transform:translateX(200%); transition:transform .3s; max-width:300px; }
+  .notif.show { transform:translateX(0); }
+  .notif-title { font-weight:700; color:var(--accent2); margin-bottom:2px; }
+
+  /* Pagination */
+  .pagination { display:flex; gap:6px; justify-content:flex-end; margin-top:14px; }
+  .pg-btn { width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--muted); }
+  .pg-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .pg-btn:hover:not(.active) { border-color:var(--accent2); color:var(--text); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">💸</div>
+    <div class="logo-text">PayRemind<span>Smart Payment System</span></div>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="showPage('invoices',this)"><span class="icon">📄</span>Invoices<span class="badge orange">4</span></div>
+    <div class="nav-item" onclick="showPage('customers',this)"><span class="icon">👥</span>Customers</div>
+    <div class="nav-item" onclick="showPage('payments',this)"><span class="icon">💳</span>Payments</div>
+    <div class="nav-section">Automation</div>
+    <div class="nav-item" onclick="showPage('reminders',this)"><span class="icon">🔔</span>Reminders<span class="badge">2</span></div>
+    <div class="nav-item" onclick="showPage('templates',this)"><span class="icon">✉️</span>Templates</div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" onclick="showPage('analytics',this)"><span class="icon">📈</span>Analytics</div>
+    <div class="nav-item" onclick="showPage('settings',this)"><span class="icon">⚙️</span>Settings</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">RK</div>
+      <div class="user-info">
+        <div class="name">Raj Kumar</div>
+        <div class="role">Business Owner</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-actions">
+      <input class="search-box" placeholder="🔍  Search invoices, customers…"/>
+      <button class="btn btn-primary" onclick="showCreateInvoice()">+ New Invoice</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-header">
+            <div class="kpi-label">Outstanding</div>
+            <div class="kpi-icon" style="background:rgba(249,115,22,.15)">💰</div>
+          </div>
+          <div class="kpi-value" style="color:var(--orange)">₹2,84,500</div>
+          <div class="kpi-change down">↑ 12% overdue this month</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-header">
+            <div class="kpi-label">Pending Invoices</div>
+            <div class="kpi-icon" style="background:rgba(99,102,241,.15)">📋</div>
+          </div>
+          <div class="kpi-value" style="color:var(--accent2)">14</div>
+          <div class="kpi-change" style="color:var(--muted)">6 due this week</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-header">
+            <div class="kpi-label">Overdue</div>
+            <div class="kpi-icon" style="background:rgba(239,68,68,.15)">⚠️</div>
+          </div>
+          <div class="kpi-value" style="color:var(--red)">7</div>
+          <div class="kpi-change down">↑ 3 since last week</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-header">
+            <div class="kpi-label">Collection Rate</div>
+            <div class="kpi-icon" style="background:rgba(34,197,94,.15)">✅</div>
+          </div>
+          <div class="kpi-value" style="color:var(--green)">78%</div>
+          <div class="kpi-change up">↑ 4% vs last month</div>
+          <div class="progress-track"><div class="progress-fill" style="width:78%;background:var(--green)"></div></div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Monthly Collections (₹)</div></div>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Jan</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--accent)">₹1.1L</div></div></div>
+            <div class="bar-row"><span class="bar-label">Feb</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--accent)">₹1.4L</div></div></div>
+            <div class="bar-row"><span class="bar-label">Mar</span><div class="bar-track"><div class="bar-fill" style="width:85%;background:var(--teal)">₹1.7L</div></div></div>
+            <div class="bar-row"><span class="bar-label">Apr</span><div class="bar-track"><div class="bar-fill" style="width:65%;background:var(--accent)">₹1.3L</div></div></div>
+            <div class="bar-row"><span class="bar-label">May</span><div class="bar-track"><div class="bar-fill" style="width:90%;background:var(--green)">₹1.8L</div></div></div>
+            <div class="bar-row"><span class="bar-label">Jun</span><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--orange)">₹0.9L</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Reminder Channel Effectiveness</div></div>
+          <div class="channel-cards">
+            <div class="channel-card">
+              <div class="channel-name">💬 WhatsApp</div>
+              <div style="font-size:22px;font-weight:800;color:var(--green)">94%</div>
+              <div class="progress-track"><div class="progress-fill" style="width:94%;background:var(--green)"></div></div>
+              <div class="channel-stats"><span>234 sent</span><span>220 delivered</span></div>
+            </div>
+            <div class="channel-card">
+              <div class="channel-name">📱 SMS</div>
+              <div style="font-size:22px;font-weight:800;color:var(--yellow)">81%</div>
+              <div class="progress-track"><div class="progress-fill" style="width:81%;background:var(--yellow)"></div></div>
+              <div class="channel-stats"><span>178 sent</span><span>144 delivered</span></div>
+            </div>
+            <div class="channel-card">
+              <div class="channel-name">✉️ Email</div>
+              <div style="font-size:22px;font-weight:800;color:var(--accent2)">67%</div>
+              <div class="progress-track"><div class="progress-fill" style="width:67%;background:var(--accent)"></div></div>
+              <div class="channel-stats"><span>156 sent</span><span>104 opened</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚠️ Top Defaulters</div>
+          <button class="btn btn-outline btn-sm">Export CSV</button>
+        </div>
+        <table>
+          <thead><tr><th>Customer</th><th>Total Overdue</th><th>Invoices</th><th>Last Reminded</th><th>Risk</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div style="font-weight:600">Sunrise Traders</div><div style="font-size:11px;color:var(--muted)">raj@sunrise.com</div></td>
+              <td style="color:var(--red);font-weight:700">₹45,200</td><td>3</td>
+              <td style="color:var(--muted);font-size:12px">2 days ago</td>
+              <td><span class="risk-label risk-high">● HIGH</span></td>
+              <td><button class="btn btn-outline btn-sm" onclick="sendReminder('Sunrise Traders')">🔔 Remind</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:600">Metro Supplies</div><div style="font-size:11px;color:var(--muted)">metro@supplies.in</div></td>
+              <td style="color:var(--orange);font-weight:700">₹32,750</td><td>2</td>
+              <td style="color:var(--muted);font-size:12px">5 days ago</td>
+              <td><span class="risk-label risk-med">● MED</span></td>
+              <td><button class="btn btn-outline btn-sm" onclick="sendReminder('Metro Supplies')">🔔 Remind</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:600">AquaFlow Tech</div><div style="font-size:11px;color:var(--muted)">billing@aquaflow.io</div></td>
+              <td style="color:var(--yellow);font-weight:700">₹18,000</td><td>1</td>
+              <td style="color:var(--muted);font-size:12px">Today</td>
+              <td><span class="risk-label risk-med">● MED</span></td>
+              <td><button class="btn btn-outline btn-sm" onclick="sendReminder('AquaFlow Tech')">🔔 Remind</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div class="tabs">
+        <div class="tab active">All (21)</div>
+        <div class="tab">Pending (14)</div>
+        <div class="tab">Overdue (7)</div>
+        <div class="tab">Paid (42)</div>
+      </div>
+      <div class="card" style="padding:0;">
+        <table>
+          <thead><tr><th>Invoice #</th><th>Customer</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Reminders</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:700;color:var(--accent2)">INV-2025-001</td>
+              <td>Sunrise Traders</td>
+              <td style="font-weight:700">₹45,200</td>
+              <td style="color:var(--red)">15 May 2025 <br><span style="font-size:10px">21 days ago</span></td>
+              <td><span class="status-badge status-overdue"><span class="dot"></span>Overdue</span></td>
+              <td style="font-size:12px;color:var(--muted)">5 sent</td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-outline btn-sm" onclick="sendReminder('INV-2025-001')">Remind</button>
+                  <button class="btn btn-primary btn-sm">Mark Paid</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--accent2)">INV-2025-002</td>
+              <td>Metro Supplies</td>
+              <td style="font-weight:700">₹32,750</td>
+              <td style="color:var(--orange)">20 May 2025<br><span style="font-size:10px">16 days ago</span></td>
+              <td><span class="status-badge status-overdue"><span class="dot"></span>Overdue</span></td>
+              <td style="font-size:12px;color:var(--muted)">3 sent</td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-outline btn-sm">Remind</button>
+                  <button class="btn btn-primary btn-sm">Mark Paid</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--accent2)">INV-2025-003</td>
+              <td>AquaFlow Tech</td>
+              <td style="font-weight:700">₹18,000</td>
+              <td style="color:var(--yellow)">3 Jun 2025<br><span style="font-size:10px">4 days left</span></td>
+              <td><span class="status-badge status-pending"><span class="dot"></span>Pending</span></td>
+              <td style="font-size:12px;color:var(--muted)">1 sent</td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-outline btn-sm">Preview</button>
+                  <button class="btn btn-primary btn-sm">Mark Paid</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--accent2)">INV-2025-004</td>
+              <td>Globex Corp</td>
+              <td style="font-weight:700">₹1,25,000</td>
+              <td>25 May 2025</td>
+              <td><span class="status-badge status-partial"><span class="dot"></span>Partial</span></td>
+              <td style="font-size:12px;color:var(--muted)">2 sent</td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-outline btn-sm">Remind</button>
+                  <button class="btn btn-primary btn-sm">Record</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--accent2)">INV-2025-005</td>
+              <td>TechCorp India</td>
+              <td style="font-weight:700">₹67,500</td>
+              <td style="color:var(--muted)">10 May 2025</td>
+              <td><span class="status-badge status-paid"><span class="dot"></span>Paid</span></td>
+              <td style="font-size:12px;color:var(--muted)">2 sent</td>
+              <td><button class="btn btn-outline btn-sm">Download</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:14px 16px;">
+          <div class="pagination">
+            <button class="pg-btn active">1</button>
+            <button class="pg-btn">2</button>
+            <button class="pg-btn">3</button>
+            <button class="pg-btn">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="page" id="page-customers">
+      <div style="display:flex;gap:14px;margin-bottom:18px">
+        <div class="kpi" style="flex:1">
+          <div class="kpi-label" style="margin-bottom:6px">Total Customers</div>
+          <div class="kpi-value" style="font-size:22px;color:var(--accent2)">47</div>
+        </div>
+        <div class="kpi" style="flex:1">
+          <div class="kpi-label" style="margin-bottom:6px">Active (invoiced)</div>
+          <div class="kpi-value" style="font-size:22px;color:var(--green)">31</div>
+        </div>
+        <div class="kpi" style="flex:1">
+          <div class="kpi-label" style="margin-bottom:6px">High Risk</div>
+          <div class="kpi-value" style="font-size:22px;color:var(--red)">6</div>
+        </div>
+        <div class="kpi" style="flex:1">
+          <div class="kpi-label" style="margin-bottom:6px">Avg Payment Days</div>
+          <div class="kpi-value" style="font-size:22px;color:var(--yellow)">18d</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Customer Directory</div><button class="btn btn-primary" onclick="showNotif('Customer form opening…','Add New Customer')">+ Add Customer</button></div>
+        <div class="customer-row">
+          <div class="cust-avatar" style="background:rgba(99,102,241,.2);color:var(--accent2)">ST</div>
+          <div style="flex:1">
+            <div style="font-weight:600">Sunrise Traders</div>
+            <div style="font-size:12px;color:var(--muted)">📱 +91 98765 43210 · ✉️ raj@sunrise.com</div>
+          </div>
+          <div style="text-align:right;margin-right:16px">
+            <div style="font-size:12px;color:var(--muted)">Total Invoiced</div>
+            <div style="font-weight:700;color:var(--orange)">₹1,45,200</div>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-label risk-high" style="font-size:11px;text-align:center;margin-bottom:4px">HIGH RISK</div>
+            <div class="progress-track"><div class="progress-fill" style="width:82%;background:var(--red)"></div></div>
+          </div>
+        </div>
+        <div class="customer-row">
+          <div class="cust-avatar" style="background:rgba(20,184,166,.2);color:var(--teal)">MS</div>
+          <div style="flex:1">
+            <div style="font-weight:600">Metro Supplies</div>
+            <div style="font-size:12px;color:var(--muted)">📱 +91 87654 32109 · ✉️ metro@supplies.in</div>
+          </div>
+          <div style="text-align:right;margin-right:16px">
+            <div style="font-size:12px;color:var(--muted)">Total Invoiced</div>
+            <div style="font-weight:700;color:var(--yellow)">₹82,750</div>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-label risk-med" style="font-size:11px;text-align:center;margin-bottom:4px">MED RISK</div>
+            <div class="progress-track"><div class="progress-fill" style="width:55%;background:var(--yellow)"></div></div>
+          </div>
+        </div>
+        <div class="customer-row">
+          <div class="cust-avatar" style="background:rgba(34,197,94,.2);color:var(--green)">TC</div>
+          <div style="flex:1">
+            <div style="font-weight:600">TechCorp India</div>
+            <div style="font-size:12px;color:var(--muted)">📱 +91 76543 21098 · ✉️ billing@techcorp.in</div>
+          </div>
+          <div style="text-align:right;margin-right:16px">
+            <div style="font-size:12px;color:var(--muted)">Total Invoiced</div>
+            <div style="font-weight:700;color:var(--green)">₹2,45,000</div>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-label risk-low" style="font-size:11px;text-align:center;margin-bottom:4px">LOW RISK</div>
+            <div class="progress-track"><div class="progress-fill" style="width:18%;background:var(--green)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REMINDERS -->
+    <div class="page" id="page-reminders">
+      <div class="chart-row" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">Reminder Schedule Config</div>
+          <table style="font-size:12px">
+            <thead><tr><th>Trigger</th><th>Channel</th><th>Status</th><th>Template</th></tr></thead>
+            <tbody>
+              <tr><td>7 days before</td><td>📧 Email</td><td><span class="status-badge status-paid">Active</span></td><td>Friendly Reminder</td></tr>
+              <tr><td>3 days before</td><td>💬 WhatsApp + 📧 Email</td><td><span class="status-badge status-paid">Active</span></td><td>Payment Due Soon</td></tr>
+              <tr><td>Due date</td><td>💬 WhatsApp + 📱 SMS + 📧</td><td><span class="status-badge status-paid">Active</span></td><td>Invoice Due Today</td></tr>
+              <tr><td>3 days overdue</td><td>💬 WhatsApp + 📱 SMS</td><td><span class="status-badge status-paid">Active</span></td><td>Urgent: Overdue</td></tr>
+              <tr><td>Weekly (overdue)</td><td>💬 WhatsApp + 📧 Email</td><td><span class="status-badge status-paid">Active</span></td><td>Final Notice</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">🤖 AI Message Preview</div>
+          <div style="background:var(--bg3);border-radius:8px;padding:14px;font-size:12px;line-height:1.7;color:var(--text)">
+            Dear <strong>Raj Mehta</strong>,<br><br>
+            This is a gentle reminder that Invoice <strong>#INV-2025-001</strong> for <strong>₹45,200</strong> is now 21 days overdue.<br><br>
+            We kindly request you to clear the outstanding amount at your earliest convenience.<br><br>
+            Pay instantly: <span style="color:var(--accent2);text-decoration:underline">payremind.in/pay/abc123</span><br><br>
+            Regards,<br><strong>Sunrise Textiles</strong>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-outline btn-sm">✨ Regenerate AI</button>
+            <button class="btn btn-outline btn-sm">📝 Edit</button>
+            <button class="btn btn-primary btn-sm" onclick="sendReminder('AI message')">Send Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Reminder History — Sunrise Traders</div></div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot tl-sent"></div>
+            <div class="tl-content">
+              <div class="tl-title">3 days overdue reminder</div>
+              <div class="tl-meta"><span>18 May 2025 · 10:00 AM</span><span style="color:var(--green)">✓ Delivered</span></div>
+              <div class="tl-channels"><span class="tl-chip green">WhatsApp ✓</span><span class="tl-chip green">SMS ✓</span><span class="tl-chip">Email</span></div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot tl-sent"></div>
+            <div class="tl-content">
+              <div class="tl-title">Due date reminder</div>
+              <div class="tl-meta"><span>15 May 2025 · 9:00 AM</span><span style="color:var(--green)">✓ Delivered</span></div>
+              <div class="tl-channels"><span class="tl-chip green">WhatsApp ✓</span><span class="tl-chip green">SMS ✓</span><span class="tl-chip green">Email ✓</span></div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot tl-sent"></div>
+            <div class="tl-content">
+              <div class="tl-title">3 days before due</div>
+              <div class="tl-meta"><span>12 May 2025 · 9:00 AM</span><span style="color:var(--green)">✓ Delivered</span></div>
+              <div class="tl-channels"><span class="tl-chip green">WhatsApp ✓</span><span class="tl-chip green">Email ✓</span></div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot tl-pending" style="background:var(--orange)"></div>
+            <div class="tl-content">
+              <div class="tl-title">Weekly overdue reminder</div>
+              <div class="tl-meta"><span>25 May 2025 · 10:00 AM</span><span style="color:var(--orange)">⏳ Scheduled</span></div>
+              <div class="tl-channels"><span class="tl-chip orange">WhatsApp</span><span class="tl-chip orange">Email</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">Total Invoiced (YTD)</div><div class="kpi-value" style="font-size:22px">₹18,42,000</div></div>
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">Collected (YTD)</div><div class="kpi-value" style="font-size:22px;color:var(--green)">₹14,37,560</div></div>
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">Avg Collection Days</div><div class="kpi-value" style="font-size:22px;color:var(--yellow)">18.4</div></div>
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">Reminder Response Rate</div><div class="kpi-value" style="font-size:22px;color:var(--teal)">62%</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Collection Rate by Month</div></div>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">January</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--accent)">72% — ₹2.1L</div></div></div>
+          <div class="bar-row"><span class="bar-label">February</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--accent)">68% — ₹1.8L</div></div></div>
+          <div class="bar-row"><span class="bar-label">March</span><div class="bar-track"><div class="bar-fill" style="width:91%;background:var(--green)">91% — ₹3.2L</div></div></div>
+          <div class="bar-row"><span class="bar-label">April</span><div class="bar-track"><div class="bar-fill" style="width:83%;background:var(--teal)">83% — ₹2.9L</div></div></div>
+          <div class="bar-row"><span class="bar-label">May</span><div class="bar-track"><div class="bar-fill" style="width:78%;background:var(--accent2)">78% — ₹2.7L</div></div></div>
+          <div class="bar-row"><span class="bar-label">June</span><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--orange)">45% — ₹0.9L (MTD)</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="page" id="page-templates">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Notification Templates</div><button class="btn btn-primary" onclick="showNotif('Template editor opening…','New Template')">+ New Template</button></div>
+        <table>
+          <thead><tr><th>Name</th><th>Channel</th><th>Trigger</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:600">Friendly Reminder</td><td>📧 Email</td><td>7 days before</td><td><span class="status-badge status-paid">Active</span></td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td style="font-weight:600">Payment Due Soon</td><td>💬 WhatsApp</td><td>3 days before</td><td><span class="status-badge status-paid">Active</span></td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td style="font-weight:600">Invoice Due Today</td><td>💬 WhatsApp + 📱 SMS</td><td>Due date</td><td><span class="status-badge status-paid">Active</span></td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td style="font-weight:600">Urgent: Overdue</td><td>📱 SMS</td><td>3 days overdue</td><td><span class="status-badge status-paid">Active</span></td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td style="font-weight:600">Final Notice</td><td>📧 Email + 💬 WhatsApp</td><td>Weekly</td><td><span class="status-badge status-pending">Draft</span></td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="page" id="page-payments">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">Collected This Month</div><div class="kpi-value" style="font-size:22px;color:var(--green)">₹89,250</div></div>
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">UPI Transactions</div><div class="kpi-value" style="font-size:22px;color:var(--teal)">18</div></div>
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">Razorpay</div><div class="kpi-value" style="font-size:22px;color:var(--accent2)">9</div></div>
+        <div class="kpi"><div class="kpi-label" style="margin-bottom:8px">Bank Transfer</div><div class="kpi-value" style="font-size:22px">6</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent Payments</div></div>
+        <table>
+          <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--accent2);font-weight:700">INV-2025-005</td><td>TechCorp India</td><td style="font-weight:700;color:var(--green)">₹67,500</td><td>💳 Razorpay</td><td>10 May 2025</td><td><span class="status-badge status-paid">Success</span></td></tr>
+            <tr><td style="color:var(--accent2);font-weight:700">INV-2025-009</td><td>Nexus Software</td><td style="font-weight:700;color:var(--green)">₹21,750</td><td>📱 UPI</td><td>8 May 2025</td><td><span class="status-badge status-paid">Success</span></td></tr>
+            <tr><td style="color:var(--accent2);font-weight:700">INV-2025-004</td><td>Globex Corp</td><td style="font-weight:700;color:var(--yellow)">₹50,000</td><td>🏦 Bank Transfer</td><td>5 May 2025</td><td><span class="status-badge status-partial">Partial</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="chart-row">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">Business Settings</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Business Name</label><input class="form-control" value="Sunrise Textiles Pvt Ltd"/></div>
+            <div class="form-group"><label>Currency</label><select class="form-control"><option>INR — Indian Rupee</option><option>USD</option></select></div>
+            <div class="form-group"><label>Timezone</label><select class="form-control"><option>Asia/Kolkata (IST +5:30)</option></select></div>
+            <div class="form-group"><label>Default Payment Terms</label><select class="form-control"><option>Net 30</option><option>Net 15</option><option>Due on Receipt</option></select></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:14px" onclick="showNotif('Settings saved!','Business Settings')">Save Changes</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">Integration Keys</div>
+          <div class="form-group" style="margin-bottom:12px"><label>Razorpay Key ID</label><input class="form-control" value="rzp_live_●●●●●●●●●●" type="password"/></div>
+          <div class="form-group" style="margin-bottom:12px"><label>WhatsApp Phone Number ID</label><input class="form-control" placeholder="Enter Meta phone number ID"/></div>
+          <div class="form-group" style="margin-bottom:12px"><label>Twilio SID</label><input class="form-control" value="AC●●●●●●●●●●●●●●●●" type="password"/></div>
+          <div class="form-group" style="margin-bottom:12px"><label>SMTP Host</label><input class="form-control" value="smtp.sendgrid.net"/></div>
+          <button class="btn btn-primary" style="margin-top:8px" onclick="showNotif('Integrations updated!','API Keys')">Update Keys</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Notification Toast -->
+<div class="notif" id="notif">
+  <div class="notif-title" id="notif-title">Reminder Sent!</div>
+  <div id="notif-body">Message dispatched via WhatsApp & SMS</div>
+</div>
+
+<script>
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+  const titles = { dashboard:'Dashboard', invoices:'Invoices', customers:'Customers', payments:'Payments', reminders:'Reminders', templates:'Templates', analytics:'Analytics', settings:'Settings' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+}
+
+function sendReminder(target) {
+  showNotif('Reminder dispatched for ' + target + ' via WhatsApp, SMS & Email', '🔔 Reminder Sent!');
+}
+
+function showCreateInvoice() {
+  showPage('invoices', document.querySelector('[onclick*="invoices"]'));
+  showNotif('Fill in customer, line items and due date to create an invoice', '📄 New Invoice');
+}
+
+function showNotif(body, title = 'Done!') {
+  const el = document.getElementById('notif');
+  document.getElementById('notif-title').textContent = title;
+  document.getElementById('notif-body').textContent = body;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// Animate bars on load
+window.addEventListener('load', () => {
+  document.querySelectorAll('.bar-fill').forEach(b => {
+    const w = b.style.width;
+    b.style.width = '0';
+    setTimeout(() => b.style.width = w, 300);
+  });
+});
+</script>
+</body>
+</html>

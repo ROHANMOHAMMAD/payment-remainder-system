@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Smart Payment System — ER Diagram</title>
+<style>
+body { background:#0f1117; color:#e8ecf5; font-family:'Segoe UI',sans-serif; padding:24px; }
+h1 { font-size:18px; margin-bottom:20px; color:#818cf8; }
+#erd { overflow-x:auto; }
+</style>
+</head>
+<body>
+<h1>Smart Payment Reminder System — Database Schema (ER Diagram)</h1>
+<div id="erd"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  fontFamily: 'Segoe UI, sans-serif',
+  themeVariables: {
+    darkMode: true,
+    fontSize: '12px',
+    lineColor: '#4f5882',
+    textColor: '#c2c0b6',
+  }
+});
+
+const diagram = `erDiagram
+  BUSINESSES ||--o{ USERS : has
+  BUSINESSES ||--o{ CUSTOMERS : manages
+  BUSINESSES ||--o{ INVOICES : owns
+  BUSINESSES ||--o{ NOTIFICATION_TEMPLATES : configures
+  CUSTOMERS ||--o{ INVOICES : receives
+  INVOICES ||--o{ PAYMENTS : generates
+  INVOICES ||--o{ REMINDER_LOGS : triggers
+  USERS ||--o{ AUDIT_LOGS : creates
+  BUSINESSES ||--o{ AUDIT_LOGS : audited_by
+  NOTIFICATION_TEMPLATES ||--o{ REMINDER_LOGS : used_in
+
+  BUSINESSES {
+    uuid id PK
+    string name
+    string slug UK
+    string email
+    string currency
+    string timezone
+    text whatsapp_token
+    text razorpay_secret
+    string plan
+    boolean is_active
+    timestamp created_at
+  }
+
+  USERS {
+    uuid id PK
+    uuid business_id FK
+    string email UK
+    string password_hash
+    string full_name
+    enum role
+    boolean is_active
+    timestamp last_login_at
+    timestamp created_at
+  }
+
+  CUSTOMERS {
+    uuid id PK
+    uuid business_id FK
+    string name
+    string email
+    string phone
+    string whatsapp
+    text address
+    int risk_score
+    decimal total_invoiced
+    decimal total_paid
+    boolean is_active
+    timestamp created_at
+  }
+
+  INVOICES {
+    uuid id PK
+    uuid business_id FK
+    uuid customer_id FK
+    string invoice_number UK
+    date issue_date
+    date due_date
+    enum status
+    decimal total_amount
+    decimal amount_paid
+    decimal balance_due
+    jsonb line_items
+    string secure_token UK
+    int reminder_count
+    timestamp next_reminder_at
+    timestamp paid_at
+    timestamp created_at
+  }
+
+  PAYMENTS {
+    uuid id PK
+    uuid invoice_id FK
+    uuid business_id FK
+    uuid customer_id FK
+    decimal amount
+    enum method
+    enum status
+    string gateway_txn_id
+    jsonb gateway_response
+    timestamp paid_at
+    timestamp created_at
+  }
+
+  REMINDER_LOGS {
+    uuid id PK
+    uuid invoice_id FK
+    uuid customer_id FK
+    uuid business_id FK
+    uuid template_id FK
+    enum channel
+    enum status
+    text message_body
+    string recipient
+    int days_offset
+    string gateway_message_id
+    int retry_count
+    timestamp sent_at
+    timestamp delivered_at
+    timestamp created_at
+  }
+
+  NOTIFICATION_TEMPLATES {
+    uuid id PK
+    uuid business_id FK
+    string name
+    enum channel
+    int trigger_days
+    string subject
+    text body
+    boolean is_active
+    boolean is_default
+    timestamp created_at
+  }
+
+  AUDIT_LOGS {
+    uuid id PK
+    uuid business_id FK
+    uuid user_id FK
+    string action
+    string entity_type
+    uuid entity_id
+    jsonb old_values
+    jsonb new_values
+    inet ip_address
+    timestamp created_at
+  }
+`;
+
+const { svg } = await mermaid.render('er-svg', diagram);
+document.getElementById('erd').innerHTML = svg;
+</script>
+</body>
+</html>
